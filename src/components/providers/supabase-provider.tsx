@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 import { Database } from '@/lib/database.types'
@@ -11,11 +11,22 @@ type SupabaseContext = {
 
 const Context = createContext<SupabaseContext | undefined>(undefined)
 
-// Singleton instance
-const supabase = createClient<Database>(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+// Environment variables kontrolü
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  throw new Error('NEXT_PUBLIC_SUPABASE_URL environment variable is required')
+}
+
+if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable is required')
+}
+
+// Supabase client'ı lazy initialization ile oluştur
+function createSupabaseClient() {
+  return createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
 
 export default function SupabaseProvider({
   children,
@@ -23,6 +34,7 @@ export default function SupabaseProvider({
   children: React.ReactNode
 }) {
   const router = useRouter()
+  const [supabase] = useState(() => createSupabaseClient())
 
   useEffect(() => {
     const {
@@ -34,7 +46,7 @@ export default function SupabaseProvider({
     return () => {
       subscription.unsubscribe()
     }
-  }, [router])
+  }, [router, supabase])
 
   return (
     <Context.Provider value={{ supabase }}>
