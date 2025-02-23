@@ -6,10 +6,18 @@ import { useSupabase } from '@/components/providers/supabase-provider';
 import { toast } from 'sonner';
 import { User, AuthError, AuthChangeEvent, Session } from '@supabase/supabase-js';
 
+interface SignInResponse {
+  error: AuthError | null;
+}
+
+interface SignUpResponse {
+  error: AuthError | null;
+}
+
 interface AuthContextType {
   user: User | null;
-  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
-  signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signIn: (email: string, password: string) => Promise<SignInResponse>;
+  signUp: (email: string, password: string) => Promise<SignUpResponse>;
   signOut: () => Promise<void>;
 }
 
@@ -57,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [supabase, router, pathname]);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string): Promise<SignInResponse> => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -66,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string): Promise<SignUpResponse> => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
