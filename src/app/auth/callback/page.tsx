@@ -4,7 +4,11 @@ import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSupabase } from "@/components/providers/supabase-provider";
 import { toast } from "sonner";
-import { VerifyOtpParams, EmailOtpType } from "@supabase/supabase-js";
+import { 
+  VerifyOtpParams, 
+  EmailOtpType,
+  AuthResponse
+} from "@supabase/supabase-js";
 
 export default function AuthCallbackPage() {
   const { supabase } = useSupabase();
@@ -23,9 +27,9 @@ export default function AuthCallbackPage() {
           token_hash,
         };
 
-        const { error } = await supabase.auth.verifyOtp(params);
+        const { data, error }: AuthResponse = await supabase.auth.verifyOtp(params);
 
-        if (!error) {
+        if (!error && data.session) {
           toast.success("E-posta adresiniz doğrulandı");
           router.push(next);
         } else {

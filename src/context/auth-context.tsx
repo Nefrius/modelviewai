@@ -8,9 +8,9 @@ import {
   User, 
   AuthError, 
   AuthChangeEvent, 
-  Session,
   SignInWithPasswordCredentials,
-  SignUpWithPasswordCredentials
+  SignUpWithPasswordCredentials,
+  AuthSession
 } from '@supabase/supabase-js';
 
 interface SignInResponse {
@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
+    } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: AuthSession | null) => {
       if (session) {
         setUser(session.user);
         if (event === 'SIGNED_IN') {
