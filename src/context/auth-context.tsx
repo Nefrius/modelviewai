@@ -4,11 +4,12 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useSupabase } from '@/components/providers/supabase-provider';
 import { toast } from 'sonner';
+import { User, AuthError } from '@supabase/supabase-js';
 
 interface AuthContextType {
-  user: any;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string) => Promise<{ error: any }>;
+  user: User | null;
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -20,7 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { supabase } = useSupabase();
   const router = useRouter();
   const pathname = usePathname();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const {

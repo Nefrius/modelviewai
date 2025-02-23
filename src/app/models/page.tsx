@@ -181,15 +181,13 @@ export default function ModelsPage() {
                 transition={{ delay: index * 0.1 }}
                 className="group relative bg-[#0A0A0F]/95 rounded-xl border border-white/[0.05] overflow-hidden backdrop-blur-[5px] shadow-xl"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-violet-500/[0.05] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                {/* Gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-violet-500/[0.05] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 
                 <div className="relative p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <motion.div
-                        whileHover={{ scale: 1.1, rotate: 5 }}
-                        className="h-12 w-12 rounded-lg bg-[#1A1A23] flex items-center justify-center"
-                      >
+                      <div className="h-12 w-12 rounded-lg bg-[#1A1A23] flex items-center justify-center">
                         <Image
                           src={model.icon}
                           alt={model.name}
@@ -198,7 +196,7 @@ export default function ModelsPage() {
                           className="w-6 h-6"
                           style={{ filter: 'invert(1)' }}
                         />
-                      </motion.div>
+                      </div>
                       <div>
                         <h3 className="text-xl font-semibold text-white group-hover:text-violet-400 transition-colors">
                           {model.name}
@@ -209,9 +207,7 @@ export default function ModelsPage() {
                       </div>
                     </div>
                     
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
+                    <button
                       onClick={() => {
                         if (isFavorite(model.id)) {
                           removeFavorite(model.id);
@@ -222,7 +218,7 @@ export default function ModelsPage() {
                       className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${
                         isFavorite(model.id)
                           ? "bg-violet-500 text-white"
-                          : "bg-white/5 text-white/40 hover:bg-violet-500/10 hover:text-violet-400"
+                          : "bg-white/5 text-white/40 group-hover:text-violet-400"
                       }`}
                     >
                       <svg
@@ -236,7 +232,7 @@ export default function ModelsPage() {
                           clipRule="evenodd"
                         />
                       </svg>
-                    </motion.button>
+                    </button>
                   </div>
 
                   <p className="mt-4 text-white/60">
@@ -251,7 +247,7 @@ export default function ModelsPage() {
                            key === "speed" ? "Hız" :
                            "Kullanım"}
                         </div>
-                        <div className="text-lg font-medium text-white">
+                        <div className="text-lg font-medium text-white group-hover:text-violet-400 transition-colors">
                           {value}
                         </div>
                       </div>
@@ -271,23 +267,13 @@ export default function ModelsPage() {
                     </div>
 
                     <Link href={`/models/${model.id}`}>
-                      <motion.button
-                        whileHover={{ x: 5 }}
-                        className="flex items-center gap-2 text-white/70 group-hover:text-violet-400 transition-colors"
-                      >
+                      <div className="flex items-center gap-2 text-white/70 group-hover:text-violet-400 transition-colors">
                         <span>Detayları Gör</span>
-                        <motion.svg
-                          className="w-4 h-4"
+                        <svg
+                          className="w-4 h-4 transform group-hover:translate-x-1 transition-transform"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
-                          animate={{ x: [0, 5, 0] }}
-                          transition={{
-                            duration: 1.5,
-                            repeat: Infinity,
-                            repeatType: "reverse",
-                            ease: "easeInOut"
-                          }}
                         >
                           <path
                             strokeLinecap="round"
@@ -295,8 +281,8 @@ export default function ModelsPage() {
                             strokeWidth={2}
                             d="M9 5l7 7-7 7"
                           />
-                        </motion.svg>
-                      </motion.button>
+                        </svg>
+                      </div>
                     </Link>
                   </div>
                 </div>

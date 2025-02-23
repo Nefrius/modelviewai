@@ -139,19 +139,16 @@ export function FeaturedModels() {
             <motion.button
               key={model.id}
               variants={cardVariants}
-              whileHover={{ y: -5, scale: 1.02 }}
-              className="group relative bg-[#0A0A0F]/95 rounded-xl border border-white/[0.05] overflow-hidden backdrop-blur-[5px] shadow-xl text-left w-full"
+              whileHover={{ scale: 1.02 }}
+              className="group relative bg-[#0A0A0F]/95 rounded-xl border border-white/[0.05] overflow-hidden backdrop-blur-[5px] text-left w-full"
             >
               {/* Gradient overlay */}
-              <div className="absolute inset-0 -z-10 bg-gradient-to-b from-violet-500/[0.05] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-gradient-to-br from-violet-500/[0.05] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               
               <div className="relative p-6 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      className="h-10 w-10 rounded-lg bg-[#1A1A23] flex items-center justify-center"
-                    >
+                    <div className="h-10 w-10 rounded-lg bg-[#1A1A23] flex items-center justify-center">
                       <Image
                         src={model.icon}
                         alt={model.name}
@@ -160,7 +157,7 @@ export function FeaturedModels() {
                         className="w-6 h-6"
                         style={{ filter: 'invert(1)' }}
                       />
-                    </motion.div>
+                    </div>
                     <motion.span
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -170,12 +167,6 @@ export function FeaturedModels() {
                       {model.category}
                     </motion.span>
                   </div>
-                  <motion.div
-                    whileHover={{ scale: 1.2 }}
-                    className="h-8 w-8 rounded-full bg-violet-500/10 flex items-center justify-center"
-                  >
-                    <div className="h-2 w-2 rounded-full bg-violet-500" />
-                  </motion.div>
                 </div>
 
                 <div>
@@ -189,29 +180,25 @@ export function FeaturedModels() {
 
                 <div className="grid grid-cols-3 gap-4 py-4 border-t border-white/[0.05]">
                   {Object.entries(model.stats).map(([key, value], i) => (
-                    <motion.div
+                    <div
                       key={key}
-                      initial={{ opacity: 0, y: 10 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.1 }}
                       className="text-center"
                     >
                       <div className="text-sm text-white/40">{key === "accuracy" ? "Doğruluk" : key === "speed" ? "Hız" : "Kullanım"}</div>
                       <div className="font-medium text-white group-hover:text-violet-400 transition-colors">
                         {value}
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
 
-                <div className="w-full px-4 py-3 rounded-lg bg-[#1A1A23] text-white/70 hover:text-violet-400 hover:bg-[#1A1A23]/80 transition-all flex items-center justify-center gap-2 group">
+                <div className="w-full px-4 py-3 rounded-lg bg-[#1A1A23] text-white/70 group-hover:text-violet-400 transition-colors flex items-center justify-center gap-2">
                   <span>Detayları İncele</span>
-                  <motion.svg
-                    className="w-4 h-4"
+                  <svg
+                    className="w-4 h-4 transform group-hover:translate-x-1 transition-transform"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
-                    whileHover={{ x: 5 }}
                   >
                     <path
                       strokeLinecap="round"
@@ -219,7 +206,7 @@ export function FeaturedModels() {
                       strokeWidth={2}
                       d="M9 5l7 7-7 7"
                     />
-                  </motion.svg>
+                  </svg>
                 </div>
               </div>
             </motion.button>

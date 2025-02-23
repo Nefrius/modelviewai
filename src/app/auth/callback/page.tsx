@@ -17,7 +17,7 @@ export default function AuthCallbackPage() {
       if (token_hash && type) {
         const { error } = await supabase.auth.verifyOtp({
           token_hash,
-          type: type as any,
+          type: type as 'email' | 'recovery' | 'invite',
         });
 
         if (!error) {

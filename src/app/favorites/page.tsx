@@ -117,15 +117,13 @@ export default function FavoritesPage() {
                   variants={cardVariants}
                   className="group relative bg-[#0A0A0F]/95 rounded-xl border border-white/[0.05] overflow-hidden backdrop-blur-[5px] shadow-xl"
                 >
-                  <div className="absolute inset-0 -z-10 bg-gradient-to-r from-violet-500/[0.05] to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  {/* Gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-violet-500/[0.05] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   
                   <div className="relative p-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
-                        <motion.div
-                          whileHover={{ scale: 1.1, rotate: 5 }}
-                          className="h-12 w-12 rounded-lg bg-[#1A1A23] flex items-center justify-center"
-                        >
+                        <div className="h-12 w-12 rounded-lg bg-[#1A1A23] flex items-center justify-center">
                           <Image
                             src={MODEL_ICONS[favorite.model_id] || "https://api.iconify.design/fluent:brain-circuit-24-filled.svg"}
                             alt={favorite.model_id}
@@ -134,7 +132,7 @@ export default function FavoritesPage() {
                             className="w-6 h-6"
                             style={{ filter: 'invert(1)' }}
                           />
-                        </motion.div>
+                        </div>
                         <div>
                           <h3 className="text-xl font-semibold text-white group-hover:text-violet-400 transition-colors">
                             {favorite.model_id}
@@ -145,9 +143,7 @@ export default function FavoritesPage() {
                         </div>
                       </div>
                       
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
+                      <button
                         onClick={() => removeFavorite(favorite.model_id)}
                         className="h-8 w-8 rounded-full bg-violet-500/10 flex items-center justify-center text-violet-400"
                       >
@@ -162,7 +158,7 @@ export default function FavoritesPage() {
                             clipRule="evenodd"
                           />
                         </svg>
-                      </motion.button>
+                      </button>
                     </div>
 
                     <div className="flex items-center justify-between mt-6 pt-6 border-t border-white/[0.05]">
@@ -176,23 +172,13 @@ export default function FavoritesPage() {
                       </div>
 
                       <Link href={`/models/${favorite.model_id}`}>
-                        <motion.button
-                          whileHover={{ x: 5 }}
-                          className="flex items-center gap-2 text-white/70 group-hover:text-violet-400 transition-colors"
-                        >
+                        <div className="flex items-center gap-2 text-white/70 group-hover:text-violet-400 transition-colors">
                           <span>Modeli Kullan</span>
-                          <motion.svg
-                            className="w-4 h-4"
+                          <svg
+                            className="w-4 h-4 transform group-hover:translate-x-1 transition-transform"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
-                            animate={{ x: [0, 5, 0] }}
-                            transition={{
-                              duration: 1.5,
-                              repeat: Infinity,
-                              repeatType: "reverse",
-                              ease: "easeInOut"
-                            }}
                           >
                             <path
                               strokeLinecap="round"
@@ -200,8 +186,8 @@ export default function FavoritesPage() {
                               strokeWidth={2}
                               d="M9 5l7 7-7 7"
                             />
-                          </motion.svg>
-                        </motion.button>
+                          </svg>
+                        </div>
                       </Link>
                     </div>
                   </div>
