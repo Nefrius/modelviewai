@@ -5,7 +5,7 @@ import { useSoundEffects } from "@/hooks/use-sound-effects";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSupabase } from "@/components/providers/supabase-provider";
-import { MODELS } from "@/app/models/page";
+import { MODELS } from "@/app/models/constants";
 
 const slideUpVariants = {
   hidden: { opacity: 0, y: 20 },
