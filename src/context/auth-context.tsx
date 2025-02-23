@@ -4,7 +4,14 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useSupabase } from '@/components/providers/supabase-provider';
 import { toast } from 'sonner';
-import { User, AuthError, AuthChangeEvent, Session } from '@supabase/supabase-js';
+import { 
+  User, 
+  AuthError, 
+  AuthChangeEvent, 
+  Session,
+  SignInWithPasswordCredentials,
+  SignUpWithPasswordCredentials
+} from '@supabase/supabase-js';
 
 interface SignInResponse {
   error: AuthError | null;
@@ -66,23 +73,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase, router, pathname]);
 
   const signIn = async (email: string, password: string): Promise<SignInResponse> => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const credentials: SignInWithPasswordCredentials = {
       email,
       password,
-    });
+    };
 
+    const { error } = await supabase.auth.signInWithPassword(credentials);
     return { error };
   };
 
   const signUp = async (email: string, password: string): Promise<SignUpResponse> => {
-    const { error } = await supabase.auth.signUp({
+    const credentials: SignUpWithPasswordCredentials = {
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
-    });
+    };
 
+    const { error } = await supabase.auth.signUp(credentials);
     return { error };
   };
 

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSupabase } from "@/components/providers/supabase-provider";
 import { toast } from "sonner";
-import { EmailOtpType } from "@supabase/supabase-js";
+import { VerifyOtpParams, EmailOtpType } from "@supabase/supabase-js";
 
 export default function AuthCallbackPage() {
   const { supabase } = useSupabase();
@@ -14,14 +14,16 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     const verifyOtp = async () => {
       const token_hash = searchParams.get("token_hash");
-      const type = searchParams.get("type") as EmailOtpType;
+      const type = searchParams.get("type") as EmailOtpType | null;
       const next = searchParams.get("next") ?? "/";
 
       if (token_hash && type) {
-        const { error } = await supabase.auth.verifyOtp({
+        const params: VerifyOtpParams = {
           type,
           token_hash,
-        });
+        };
+
+        const { error } = await supabase.auth.verifyOtp(params);
 
         if (!error) {
           toast.success("E-posta adresiniz doğrulandı");
