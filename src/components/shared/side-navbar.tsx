@@ -177,7 +177,14 @@ export const SideNavbar = memo(function SideNavbar() {
     }
   }, []);
 
-  const filteredItems = MENU_ITEMS.filter(item => !item.requiresAuth || user);
+  const filteredItems = MENU_ITEMS.filter(item => {
+    // Admin sayfasını sadece belirli e-posta için göster
+    if (item.requiresAdmin) {
+      return user?.email === "nefriusbuss@gmail.com";
+    }
+    // Diğer sayfalar için normal kontrol
+    return !item.requiresAuth || user;
+  });
 
   return (
     <motion.nav
