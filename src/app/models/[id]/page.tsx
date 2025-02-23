@@ -4,229 +4,68 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { useFavorites } from "@/hooks/use-favorites";
-import { useLikes } from '@/hooks/use-likes'
-import { useComments } from '@/hooks/use-comments'
-import { useAuth } from '@/hooks/use-auth'
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { Textarea } from '@/components/ui/textarea'
-import { formatDistanceToNow } from 'date-fns'
-import { tr } from 'date-fns/locale'
-import Link from 'next/link'
-import { toast } from 'sonner'
+import { useComments } from "@/hooks/use-comments";
+import { useAuth } from "@/hooks/use-auth";
 import Image from "next/image";
+import Link from "next/link";
+import { toast } from "sonner";
+import { MODELS } from "../page";
 
-const MODEL_DETAILS = {
-  "gpt-4-turbo": {
-    name: "GPT-4 Turbo",
-    description: "En gelişmiş dil modeli ile metin üretimi ve analizi yapın. Gelişmiş bağlam anlama ve doğal dil işleme yetenekleri ile projelerinizi bir üst seviyeye taşıyın.",
-    category: "Dil Modeli",
-    icon: "https://api.iconify.design/fluent:brain-circuit-24-filled.svg",
-    provider: "OpenAI",
-    version: "1.0.0",
-    features: [
-      "Çoklu dil desteği",
-      "Kod üretimi",
-      "Metin analizi",
-      "Soru cevaplama"
-    ],
+interface Model {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  icon: string;
+  provider: string;
+  website: string;
+  pricing: string;
+  features: string[];
     stats: {
-      accuracy: "98%",
-      speed: "0.1s",
-      usage: "10M+",
-      rating: "4.9"
-    },
-    pricing: {
-      free: true,
-      price: "0.01$/1K token"
-    },
-    techSpecs: [
-      { label: "Bağlam Penceresi", value: "128K token" },
-      { label: "Model Boyutu", value: "1.76T parametre" },
-      { label: "Desteklenen Diller", value: "100+" },
-      { label: "API Latency", value: "100ms" },
-      { label: "Günlük Limit", value: "Sınırsız" },
-      { label: "Paralel İstek", value: "100/dk" }
-    ]
-  },
-  "dall-e-3": {
-    name: "DALL-E 3",
-    description: "Metinden gerçekçi ve yaratıcı görseller oluşturun. Yüksek çözünürlüklü, detaylı ve özelleştirilebilir görsel üretimi için ideal çözüm.",
-    category: "Görsel Üretimi",
-    icon: "https://api.iconify.design/fluent:image-sparkle-24-filled.svg",
-    provider: "OpenAI",
-    version: "3.0.0",
-    features: [
-      "4K çözünürlük",
-      "Stil kontrolü",
-      "Nesne manipülasyonu",
-      "Batch üretim"
-    ],
-    stats: {
-      accuracy: "95%",
-      speed: "2.5s",
-      usage: "5M+",
-      rating: "4.8"
-    },
-    pricing: {
-      free: false,
-      price: "0.02$/görsel"
-    },
-    techSpecs: [
-      { label: "Maksimum Çözünürlük", value: "4096x4096px" },
-      { label: "Minimum Boyut", value: "512x512px" },
-      { label: "Desteklenen Formatlar", value: "PNG, JPEG" },
-      { label: "API Latency", value: "2-3s" },
-      { label: "Günlük Limit", value: "1000 görsel" },
-      { label: "Paralel İstek", value: "10/dk" }
-    ]
-  },
-  "stable-diffusion-xl": {
-    name: "Stable Diffusion XL",
-    description: "Yüksek kaliteli ve özelleştirilebilir görsel üretimi. Gelişmiş kontrol seçenekleri ve hızlı üretim kapasitesi ile yaratıcı projeleriniz için mükemmel çözüm.",
-    category: "Görsel Üretimi",
-    icon: "https://api.iconify.design/fluent:image-edit-24-filled.svg",
-    provider: "Stability AI",
-    version: "1.0.0",
-    features: [
-      "8K çözünürlük",
-      "LoRA desteği",
-      "Inpainting",
-      "Outpainting"
-    ],
-    stats: {
-      accuracy: "94%",
-      speed: "1.8s",
-      usage: "8M+",
-      rating: "4.7"
-    },
-    pricing: {
-      free: true,
-      price: "0.015$/görsel"
-    },
-    techSpecs: [
-      { label: "Maksimum Çözünürlük", value: "8192x8192px" },
-      { label: "Model Boyutu", value: "6.9B parametre" },
-      { label: "Desteklenen Formatlar", value: "PNG, JPEG, WebP" },
-      { label: "API Latency", value: "1.5-2s" },
-      { label: "Günlük Limit", value: "500 görsel" },
-      { label: "Paralel İstek", value: "5/dk" }
-    ]
-  },
-  "whisper-ai": {
-    name: "Whisper AI",
-    description: "Gelişmiş ses tanıma ve çeviri teknolojisi. 90'dan fazla dilde konuşma tanıma ve çeviri yapabilme yeteneği ile ses projeleriniz için ideal çözüm.",
-    category: "Ses İşleme",
-    icon: "https://api.iconify.design/fluent:mic-sparkle-24-filled.svg",
-    provider: "OpenAI",
-    version: "2.0.0",
-    features: [
-      "90+ dil desteği",
-      "Gerçek zamanlı çeviri",
-      "Gürültü filtresi",
-      "Konuşmacı ayrıştırma"
-    ],
-    stats: {
-      accuracy: "97%",
-      speed: "1.2s",
-      usage: "3M+",
-      rating: "4.6"
-    },
-    pricing: {
-      free: true,
-      price: "0.006$/dakika"
-    },
-    techSpecs: [
-      { label: "Maksimum Süre", value: "4 saat" },
-      { label: "Desteklenen Formatlar", value: "MP3, WAV, M4A" },
-      { label: "Örnekleme Hızı", value: "16kHz" },
-      { label: "API Latency", value: "1-1.5s" },
-      { label: "Günlük Limit", value: "100 saat" },
-      { label: "Paralel İstek", value: "10/dk" }
-    ]
-  },
-  "claude-3": {
-    name: "Claude 3",
-    description: "Çok yönlü ve güçlü yapay zeka asistanı. Gelişmiş anlama ve yanıtlama yetenekleri ile her türlü metin tabanlı görev için ideal çözüm.",
-    category: "Dil Modeli",
-    icon: "https://api.iconify.design/fluent:bot-24-filled.svg",
-    provider: "Anthropic",
-    version: "3.0.0",
-    features: [
-      "Uzun bağlam desteği",
-      "Çoklu format işleme",
-      "Güvenlik kontrolleri",
-      "Özelleştirilebilir yanıtlar"
-    ],
-    stats: {
-      accuracy: "96%",
-      speed: "0.2s",
-      usage: "4M+",
-      rating: "4.8"
-    },
-    pricing: {
-      free: false,
-      price: "0.008$/1K token"
-    },
-    techSpecs: [
-      { label: "Bağlam Penceresi", value: "100K token" },
-      { label: "Model Boyutu", value: "1.5T parametre" },
-      { label: "Desteklenen Diller", value: "50+" },
-      { label: "API Latency", value: "150ms" },
-      { label: "Günlük Limit", value: "Sınırsız" },
-      { label: "Paralel İstek", value: "50/dk" }
-    ]
-  },
-  "midjourney-v6": {
-    name: "Midjourney V6",
-    description: "Sanatsal ve yaratıcı görsel üretim modeli. Gelişmiş stil kontrolü ve yüksek kaliteli görsel üretimi ile sanatsal projeleriniz için mükemmel çözüm.",
-    category: "Görsel Üretimi",
-    icon: "https://api.iconify.design/fluent:paint-brush-24-filled.svg",
-    provider: "Midjourney",
-    version: "6.0.0",
-    features: [
-      "Sanatsal stil kontrolü",
-      "Yüksek çözünürlük",
-      "Kompozisyon kontrolü",
-      "Stil karışımı"
-    ],
-    stats: {
-      accuracy: "93%",
-      speed: "3.0s",
-      usage: "6M+",
-      rating: "4.7"
-    },
-    pricing: {
-      free: false,
-      price: "0.03$/görsel"
-    },
-    techSpecs: [
-      { label: "Maksimum Çözünürlük", value: "16384x16384px" },
-      { label: "Stil Sayısı", value: "1000+" },
-      { label: "Desteklenen Formatlar", value: "PNG, JPEG, WebP" },
-      { label: "API Latency", value: "2.5-3.5s" },
-      { label: "Günlük Limit", value: "200 görsel" },
-      { label: "Paralel İstek", value: "3/dk" }
-    ]
-  }
-};
+    accuracy: string;
+    speed: string;
+    usage: string;
+  };
+  badges: string[];
+}
+
+interface Comment {
+  id: string;
+  content: string;
+  created_at: string;
+  user_id: string;
+  profiles: {
+    username: string | null;
+    avatar_url: string | null;
+  } | null;
+}
 
 export default function ModelDetailPage() {
   const params = useParams();
-  const modelId = params.id as string;
-  const model = MODEL_DETAILS[modelId as keyof typeof MODEL_DETAILS];
-  const { isFavorite, addFavorite, removeFavorite } = useFavorites();
-  const { likes, isLiked, toggleLike } = useLikes();
-  const { comments, isLoading, addComment, deleteComment } = useComments(modelId);
   const { user } = useAuth();
+  const { isFavorite, addFavorite, removeFavorite } = useFavorites();
+  const { comments, isLoading: isLoadingComments, addComment, deleteComment } = useComments(params.id as string);
   const [newComment, setNewComment] = useState("");
-  const [activeTab, setActiveTab] = useState<'overview' | 'specs' | 'comments'>('overview');
+
+  // Modeli bul
+  const model = MODELS.find((m: Model) => m.id === params.id);
 
   if (!model) {
     return (
-      <div className="min-h-screen w-full flex items-center justify-center">
+      <div className="min-h-screen w-full py-32">
+        <div className="container mx-auto px-4">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-white mb-4">Model Bulunamadı</h1>
-          <p className="text-white/60">Aradığınız model mevcut değil.</p>
+            <Link href="/models">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="px-6 py-3 rounded-lg bg-violet-500 text-white font-medium hover:bg-violet-600 transition-colors"
+              >
+                Modellere Dön
+              </motion.button>
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -234,365 +73,541 @@ export default function ModelDetailPage() {
 
   const handleCommentSubmit = async () => {
     if (!user) {
-      toast.error('Yorum yapmak için giriş yapmalısınız');
+      toast.error("Yorum yapmak için giriş yapmalısınız");
       return;
     }
     if (!newComment.trim()) {
-      toast.error('Yorum boş olamaz');
+      toast.error("Yorum boş olamaz");
       return;
     }
     await addComment(newComment);
     setNewComment("");
-    toast.success('Yorumunuz eklendi');
+    toast.success("Yorumunuz eklendi");
   };
 
   const handleLike = async () => {
     if (!user) {
-      toast.error('Beğenmek için giriş yapmalısınız');
+      toast.error("Beğenmek için giriş yapmalısınız");
       return;
     }
-    await toggleLike(modelId);
-  };
-
-  const handleFavorite = async () => {
-    if (!user) {
-      toast.error('Favorilere eklemek için giriş yapmalısınız');
-      return;
-    }
-    if (isFavorite(modelId)) {
-      await removeFavorite(modelId);
-      toast.success('Favorilerden kaldırıldı');
+    if (isFavorite(model.id)) {
+      await removeFavorite(model.id);
+      toast.success("Model favorilerden kaldırıldı");
     } else {
-      await addFavorite(modelId);
-      toast.success('Favorilere eklendi');
+      await addFavorite(model.id);
+      toast.success("Model favorilere eklendi");
     }
   };
 
   return (
-    <div className="min-h-screen w-full py-32">
-      {/* Background Glow */}
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(120,119,198,0.15),transparent)]" />
-
-      <div className="container mx-auto px-4">
-        <div className="max-w-4xl mx-auto">
-          {/* Navigation */}
-          <Link 
-            href="/models"
-            className="inline-flex items-center text-sm text-white/40 hover:text-violet-400 mb-8 group"
-          >
-            <motion.svg
-              className="w-5 h-5 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              animate={{ x: [0, -5, 0] }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                repeatType: "reverse",
-                ease: "easeInOut"
-              }}
+    <div className="min-h-screen w-full">
+      {/* Hero Section */}
+      <div className="relative h-[40vh] min-h-[400px] w-full flex items-center justify-center overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.3),transparent)]" />
+        <div className="absolute inset-0 bg-grid-white/[0.02]" />
+        
+        {/* Content */}
+        <div className="relative container mx-auto px-4 py-20 text-center">
+          <Link href="/models">
+              <motion.div
+              whileHover={{ x: -5 }}
+              className="inline-flex items-center gap-2 text-white/60 hover:text-violet-400 mb-8 group transition-colors"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </motion.svg>
-            <span>AI Modellerine Dön</span>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+              <span>Modellere Dön</span>
+            </motion.div>
           </Link>
 
-          {/* Model Header */}
-          <div className="bg-[#1A1A23]/50 rounded-xl p-8 mb-8 backdrop-blur-sm border border-white/[0.05]">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <motion.div
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  className="h-16 w-16 rounded-2xl bg-[#1A1A23] flex items-center justify-center"
-                >
-                  <Image
-                    src={model.icon}
-                    alt={model.name}
-                    width={32}
-                    height={32}
-                    className="w-8 h-8"
-                    style={{ filter: 'invert(1)' }}
-                  />
-                </motion.div>
-                <div>
-                  <h1 className="text-3xl font-bold text-white mb-1">
-                    {model.name}
-                  </h1>
-                  <div className="flex items-center gap-3 text-sm text-white/40">
-                    <span>{model.provider}</span>
-                    <span>•</span>
-                    <span>v{model.version}</span>
-                  </div>
-                </div>
-              </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center gap-6"
+          >
+            <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-violet-500/20 to-violet-500/5 p-4 backdrop-blur-sm border border-white/[0.05]">
+              <Image
+                  src={model.icon}
+                  alt={model.name}
+                width={48}
+                height={48}
+                className="w-12 h-12"
+                  style={{ filter: 'invert(1)' }}
+                />
+            </div>
 
-              <div className="flex items-center gap-3">
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
+            <div className="space-y-4">
+              <h1 className="text-4xl md:text-5xl font-bold text-white">{model.name}</h1>
+              <div className="flex items-center justify-center gap-3">
+                {model.badges?.map((badge: string) => (
+                  <span
+                    key={badge}
+                    className="px-3 py-1.5 text-sm rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/20"
+                  >
+                    {badge}
+                  </span>
+                ))}
+                </div>
+              <div className="flex items-center justify-center gap-3">
+                <span className="px-4 py-2 text-sm rounded-full bg-[#1A1A23] text-white/70 border border-white/[0.05]">
+                  {model.category}
+                </span>
+                <span className={`px-4 py-2 text-sm rounded-full ${
+                  model.pricing === "Ücretsiz"
+                    ? "bg-green-500/10 text-green-400 border border-green-500/20"
+                    : model.pricing === "Ücretli"
+                    ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                    : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                }`}>
+                  {model.pricing}
+                </span>
+              </div>
+            </div>
+          </motion.div>
+              </div>
+            </div>
+
+      <div className="container mx-auto px-4 py-16">
+        <div className="max-w-4xl mx-auto">
+          {/* Description & Stats */}
+          <div className="bg-[#0A0A0F]/95 rounded-2xl border border-white/[0.05] overflow-hidden backdrop-blur-[5px] shadow-xl mb-8">
+            <div className="p-8">
+              <div className="flex items-center justify-between mb-6">
+                <p className="text-xl text-white/70">{model.description}</p>
+              <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={handleLike}
-                  className={`h-10 w-10 rounded-full flex items-center justify-center transition-colors ${
-                    isLiked[modelId]
-                      ? "bg-violet-500 text-white"
-                      : "bg-white/5 text-white/40 hover:bg-violet-500/10 hover:text-violet-400"
-                  }`}
+                  className={`h-12 w-12 rounded-xl flex items-center justify-center transition-colors ${
+                    isFavorite(model.id)
+                    ? "bg-violet-500 text-white"
+                      : "bg-white/5 text-white/40 hover:text-violet-400"
+                }`}
+              >
+                <svg
+                    className="w-6 h-6"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
                 >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
-                  </svg>
-                </motion.button>
-
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={handleFavorite}
-                  className={`h-10 w-10 rounded-full flex items-center justify-center transition-colors ${
-                    isFavorite(modelId)
-                      ? "bg-violet-500 text-white"
-                      : "bg-white/5 text-white/40 hover:bg-violet-500/10 hover:text-violet-400"
-                  }`}
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                  </svg>
-                </motion.button>
-              </div>
-            </div>
-
-            <p className="text-lg text-white/60 mb-8">
-              {model.description}
-            </p>
-
-            <div className="grid grid-cols-4 gap-4">
-              {Object.entries(model.stats).map(([key, value]) => (
-                <div
-                  key={key}
-                  className="bg-[#1A1A23] rounded-lg p-4 text-center"
-                >
-                  <div className="text-sm text-white/40 mb-1">
-                    {key === "accuracy" ? "Doğruluk" :
-                     key === "speed" ? "Hız" :
-                     key === "usage" ? "Kullanım" :
-                     "Puan"}
-                  </div>
-                  <div className="text-xl font-semibold text-white">
-                    {value}
-                  </div>
-                </div>
-              ))}
-              <div className="bg-[#1A1A23] rounded-lg p-4 text-center">
-                <div className="text-sm text-white/40 mb-1">
-                  Beğeni
-                </div>
-                <div className="text-xl font-semibold text-white">
-                  {likes[modelId] || 0}
-                </div>
-              </div>
-            </div>
+                  <path
+                    fillRule="evenodd"
+                    d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </motion.button>
           </div>
 
-          {/* Tabs */}
-          <div className="flex border-b border-white/[0.05] mb-8">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`px-6 py-3 text-sm font-medium transition-colors ${
-                activeTab === 'overview'
-                  ? "text-violet-400 border-b-2 border-violet-400"
-                  : "text-white/40 hover:text-white/60"
-              }`}
-            >
-              Genel Bakış
-            </button>
-            <button
-              onClick={() => setActiveTab('specs')}
-              className={`px-6 py-3 text-sm font-medium transition-colors ${
-                activeTab === 'specs'
-                  ? "text-violet-400 border-b-2 border-violet-400"
-                  : "text-white/40 hover:text-white/60"
-              }`}
-            >
-              Teknik Özellikler
-            </button>
-            <button
-              onClick={() => setActiveTab('comments')}
-              className={`px-6 py-3 text-sm font-medium transition-colors ${
-                activeTab === 'comments'
-                  ? "text-violet-400 border-b-2 border-violet-400"
-                  : "text-white/40 hover:text-white/60"
-              }`}
-            >
-              Yorumlar
-            </button>
-          </div>
-
-          {/* Tab Content */}
-          {activeTab === 'overview' && (
-            <div className="space-y-8">
-              {/* Features */}
-              <div>
-                <h2 className="text-xl font-semibold text-white mb-4">
-                  Özellikler
-                </h2>
-                <div className="grid grid-cols-2 gap-4">
-                  {model.features.map((feature, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="bg-[#1A1A23]/50 rounded-lg p-4 backdrop-blur-sm border border-white/[0.05]"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
-                          <svg className="w-4 h-4 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                        <span className="text-white/80">{feature}</span>
+              <div className="grid grid-cols-3 gap-6">
+            {Object.entries(model.stats).map(([key, value]) => (
+              <motion.div
+                key={key}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="relative bg-[#1A1A23] rounded-xl p-6 overflow-hidden group"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="relative">
+                      <div className="text-3xl font-bold text-white group-hover:text-violet-400 transition-colors">
+                        {value}
                       </div>
-                    </motion.div>
-                  ))}
+                      <div className="text-sm text-white/40 mt-1">
+                  {key === "accuracy" ? "Doğruluk" :
+                   key === "speed" ? "Hız" :
+                         "Kullanım"}
                 </div>
-              </div>
-
-              {/* Pricing */}
-              <div>
-                <h2 className="text-xl font-semibold text-white mb-4">
-                  Fiyatlandırma
-                </h2>
-                <div className="bg-[#1A1A23]/50 rounded-lg p-6 backdrop-blur-sm border border-white/[0.05]">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      {model.pricing.free ? (
-                        <span className="px-3 py-1 text-sm bg-green-500/10 text-green-400 rounded-full">
-                          Ücretsiz Kullanım
-                        </span>
-                      ) : (
-                        <span className="px-3 py-1 text-sm bg-violet-500/10 text-violet-400 rounded-full">
-                          Ücretli
-                        </span>
-                      )}
-                    </div>
-                    <div className="text-2xl font-bold text-white">
-                      {model.pricing.price}
-                    </div>
-                  </div>
-                  <p className="text-sm text-white/40">
-                    * Fiyatlar kullanım miktarına göre değişiklik gösterebilir.
-                  </p>
                 </div>
+              </motion.div>
+            ))}
               </div>
             </div>
-          )}
+          </div>
 
-          {activeTab === 'specs' && (
-            <div className="grid grid-cols-2 gap-4">
-              {model.techSpecs.map((spec, index) => (
+          {/* Features and Provider Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div className="bg-[#0A0A0F]/95 rounded-2xl border border-white/[0.05] p-8">
+              <h2 className="text-2xl font-semibold text-white mb-6">Özellikler</h2>
+              <div className="grid gap-4">
+                {model.features.map((feature: string, index: number) => (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="bg-[#1A1A23]/50 rounded-lg p-6 backdrop-blur-sm border border-white/[0.05]"
-                >
-                  <div className="text-sm text-white/40 mb-2">{spec.label}</div>
-                  <div className="text-lg font-semibold text-white">{spec.value}</div>
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="flex items-center gap-4 p-4 rounded-xl bg-[#1A1A23] border border-white/[0.05] group hover:border-violet-500/20 transition-colors"
+                  >
+                    <div className="h-3 w-3 rounded-full bg-violet-500/20 group-hover:bg-violet-500 transition-colors" />
+                    <span className="text-white/70 group-hover:text-violet-400 transition-colors">{feature}</span>
                 </motion.div>
               ))}
             </div>
-          )}
+          </div>
 
-          {activeTab === 'comments' && (
-            <div className="space-y-6">
-              {/* Comment Input */}
-              {user && (
-                <div className="bg-[#1A1A23]/50 rounded-lg p-6 backdrop-blur-sm border border-white/[0.05]">
-                  <Textarea
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Yorumunuzu yazın..."
-                    className="mb-4 bg-[#1A1A23] border-white/[0.05] text-white"
-                  />
-                  <div className="flex justify-end">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={handleCommentSubmit}
-                      className="px-4 py-2 bg-violet-500 text-white rounded-lg text-sm font-medium hover:bg-violet-600 transition-colors"
-                    >
-                      Yorum Yap
-                    </motion.button>
+            <div className="bg-[#0A0A0F]/95 rounded-2xl border border-white/[0.05] p-8">
+              <h2 className="text-2xl font-semibold text-white mb-6">Sağlayıcı Bilgileri</h2>
+              <div className="space-y-6">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-6 rounded-xl bg-[#1A1A23] border border-white/[0.05]"
+                >
+                  <div className="text-sm text-white/40 mb-2">Sağlayıcı</div>
+                  <div className="text-xl text-white/90">{model.provider}</div>
+                </motion.div>
+                
+                <motion.a
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  href={model.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  <div className="group p-6 rounded-xl bg-violet-500/10 border border-violet-500/20 hover:bg-violet-500/20 transition-all">
+                    <div className="flex items-center justify-between text-violet-400">
+                      <span className="text-lg">Website&apos;yi Ziyaret Et</span>
+                      <svg
+                        className="w-6 h-6 transform group-hover:translate-x-1 transition-transform"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17 8l4 4m0 0l-4 4m4-4H3"
+                        />
+                      </svg>
                   </div>
-                </div>
-              )}
+                  </div>
+                </motion.a>
+              </div>
+            </div>
+          </div>
 
-              {/* Comments List */}
-              {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+          {/* Comments Section */}
+          <div className="bg-[#0A0A0F]/95 rounded-2xl border border-white/[0.05] p-8">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Image
+                    src="https://api.iconify.design/fluent:chat-multiple-24-filled.svg"
+                    alt="comments"
+                    width={28}
+                    height={28}
+                    className="w-7 h-7"
+                    style={{ filter: 'invert(0.4) sepia(1) saturate(3) hue-rotate(220deg)' }}
+                  />
+                  <h2 className="text-2xl font-semibold text-white">Yorumlar</h2>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20">
+                    <span className="text-sm text-violet-400">{comments.length} yorum</span>
+                  </div>
+                  {comments.length > 0 && (
+                    <div className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                      <span className="text-sm text-emerald-400">En son {new Date(comments[0]?.created_at).toLocaleDateString("tr-TR", { month: 'short', day: 'numeric' })}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              {!user && (
+                <Link href="/auth">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="px-4 py-2 rounded-xl bg-violet-500/10 text-violet-400 border border-violet-500/20 hover:bg-violet-500/20 transition-all flex items-center gap-2"
+                  >
+                    <Image
+                      src="https://api.iconify.design/fluent:person-add-24-regular.svg"
+                      alt="login"
+                      width={20}
+                      height={20}
+                      className="w-5 h-5"
+                      style={{ filter: 'invert(0.4) sepia(1) saturate(3) hue-rotate(220deg)' }}
+                    />
+                    <span>Yorum yapmak için giriş yap</span>
+                  </motion.button>
+                </Link>
+              )}
+            </div>
+            
+            {/* Comment Input */}
+            {user && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-8"
+              >
+                <div className="flex items-start gap-4">
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    className="h-12 w-12 rounded-xl bg-violet-500/10 flex items-center justify-center flex-shrink-0 overflow-hidden border border-violet-500/20"
+                  >
+                    {user.user_metadata?.avatar_url ? (
+                      <Image
+                        src={user.user_metadata.avatar_url}
+                        alt={user.user_metadata?.username || ""}
+                        width={48}
+                        height={48}
+                        className="rounded-xl"
+                      />
+                    ) : (
+                      <span className="text-lg font-medium text-violet-400">
+                        {user.email?.[0]?.toUpperCase()}
+                      </span>
+                    )}
+                  </motion.div>
+                  <div className="flex-1">
+                    <div className="relative">
+                      <textarea
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        placeholder="Bu model hakkında deneyimlerinizi paylaşın..."
+                        className="w-full px-6 py-4 bg-[#1A1A23] border border-white/[0.05] rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-violet-500/50 min-h-[120px] transition-all pr-12"
+                      />
+                      <div className="absolute right-4 top-4 text-white/20">
+                        <Image
+                          src="https://api.iconify.design/fluent:emoji-sparkle-24-regular.svg"
+                          alt="emoji"
+                          width={24}
+                          height={24}
+                          className="w-6 h-6 opacity-60 hover:opacity-100 cursor-pointer transition-opacity"
+                          style={{ filter: 'invert(0.4)' }}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between mt-4">
+                      <div className="flex items-center gap-4 text-sm text-white/40">
+                        <div className="flex items-center gap-1">
+                          <Image
+                            src="https://api.iconify.design/fluent:markdown-24-regular.svg"
+                            alt="markdown"
+                            width={16}
+                            height={16}
+                            className="w-4 h-4"
+                            style={{ filter: 'invert(0.4)' }}
+                          />
+                          <span>Markdown</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Image
+                            src="https://api.iconify.design/fluent:timer-24-regular.svg"
+                            alt="timer"
+                            width={16}
+                            height={16}
+                            className="w-4 h-4"
+                            style={{ filter: 'invert(0.4)' }}
+                          />
+                          <span>Otomatik kayıt</span>
+                        </div>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleCommentSubmit}
+                        className="px-6 py-3 bg-violet-500 text-white rounded-xl hover:bg-violet-600 transition-colors flex items-center gap-2 relative overflow-hidden group"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-violet-500 transform translate-x-[-100%] group-hover:translate-x-0 transition-transform" />
+                        <Image
+                          src="https://api.iconify.design/fluent:send-24-filled.svg"
+                          alt="send"
+                          width={20}
+                          height={20}
+                          className="w-5 h-5 relative z-10"
+                          style={{ filter: 'invert(1)' }}
+                        />
+                        <span className="relative z-10">Yorum Yap</span>
+                      </motion.button>
+                    </div>
+                  </div>
+              </div>
+              </motion.div>
+            )}
+
+            {/* Comments List */}
+            <div className="space-y-6">
+              {isLoadingComments ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-500" />
                 </div>
               ) : comments.length > 0 ? (
-                comments.map((comment) => (
+                comments.map((comment: Comment) => (
                   <motion.div
                     key={comment.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-[#1A1A23]/50 rounded-lg p-6 backdrop-blur-sm border border-white/[0.05]"
+                    className="group p-6 rounded-xl bg-[#1A1A23] border border-white/[0.05] hover:border-violet-500/20 transition-all relative overflow-hidden"
                   >
-                    <div className="flex items-start gap-4">
-                      <Avatar>
-                        <AvatarImage
-                          src={comment.profiles?.avatar_url || ""}
-                          alt={comment.profiles?.username || "User"}
-                        />
-                        <AvatarFallback>
-                          {comment.profiles?.username?.[0]?.toUpperCase() || "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
+                    <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="relative">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-4">
+                          <motion.div
+                            whileHover={{ scale: 1.05 }}
+                            className="h-12 w-12 rounded-xl bg-violet-500/10 flex items-center justify-center overflow-hidden border border-violet-500/20"
+                          >
+                            {comment.profiles?.avatar_url ? (
+                              <Image
+                                src={comment.profiles.avatar_url}
+                                alt={comment.profiles.username || ""}
+                                width={48}
+                                height={48}
+                                className="rounded-xl"
+                              />
+                            ) : (
+                              <span className="text-lg font-medium text-violet-400">
+                                {comment.profiles?.username?.[0]?.toUpperCase()}
+                              </span>
+                            )}
+                          </motion.div>
                           <div>
-                            <span className="font-medium text-white">
+                            <div className="text-lg font-medium text-white group-hover:text-violet-400 transition-colors flex items-center gap-2">
                               {comment.profiles?.username || "Anonim"}
+                              {user?.id === comment.user_id && (
+                                <span className="text-xs px-2 py-0.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400">
+                                  Yazar
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-3 text-sm text-white/40">
+                              <div className="flex items-center gap-1">
+                                <Image
+                                  src="https://api.iconify.design/fluent:calendar-24-regular.svg"
+                                  alt="calendar"
+                                  width={16}
+                                  height={16}
+                                  className="w-4 h-4"
+                                  style={{ filter: 'invert(0.4)' }}
+                                />
+                                <span>
+                                  {new Date(comment.created_at).toLocaleDateString("tr-TR", {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                  })}
                             </span>
-                            <span className="text-sm text-white/40 ml-2">
-                              {formatDistanceToNow(new Date(comment.created_at), {
-                                addSuffix: true,
-                                locale: tr
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Image
+                                  src="https://api.iconify.design/fluent:clock-24-regular.svg"
+                                  alt="time"
+                                  width={16}
+                                  height={16}
+                                  className="w-4 h-4"
+                                  style={{ filter: 'invert(0.4)' }}
+                                />
+                                <span>
+                                  {new Date(comment.created_at).toLocaleTimeString("tr-TR", {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
                               })}
                             </span>
+                              </div>
+                            </div>
+                          </div>
                           </div>
                           {user?.id === comment.user_id && (
                             <motion.button
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.9 }}
                               onClick={() => deleteComment(comment.id)}
-                              className="text-white/40 hover:text-red-400"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
+                            className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-500 p-2 transition-all rounded-lg hover:bg-red-500/10"
+                          >
+                            <Image
+                              src="https://api.iconify.design/fluent:delete-24-filled.svg"
+                              alt="delete"
+                              width={24}
+                              height={24}
+                              className="w-6 h-6"
+                              style={{ filter: 'invert(0.4) sepia(1) saturate(20) hue-rotate(340deg)' }}
+                            />
                             </motion.button>
                           )}
                         </div>
-                        <p className="text-white/80">{comment.content}</p>
+                      <div className="mt-4 text-white/70 text-lg relative">
+                        <Image
+                          src="https://api.iconify.design/fluent:chat-24-regular.svg"
+                          alt="quote"
+                          width={24}
+                          height={24}
+                          className="absolute -left-2 -top-2 w-6 h-6 opacity-10"
+                          style={{ filter: 'invert(1)' }}
+                        />
+                        <p className="pl-6 leading-relaxed">{comment.content}</p>
+                      </div>
+                      <div className="mt-4 flex items-center gap-4">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="text-white/40 hover:text-violet-400 transition-colors flex items-center gap-1 text-sm"
+                        >
+                          <Image
+                            src="https://api.iconify.design/fluent:arrow-reply-24-regular.svg"
+                            alt="reply"
+                            width={16}
+                            height={16}
+                            className="w-4 h-4"
+                            style={{ filter: 'invert(0.4)' }}
+                          />
+                          <span>Yanıtla</span>
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="text-white/40 hover:text-violet-400 transition-colors flex items-center gap-1 text-sm"
+                        >
+                          <Image
+                            src="https://api.iconify.design/fluent:share-24-regular.svg"
+                            alt="share"
+                            width={16}
+                            height={16}
+                            className="w-4 h-4"
+                            style={{ filter: 'invert(0.4)' }}
+                          />
+                          <span>Paylaş</span>
+                        </motion.button>
                       </div>
                     </div>
                   </motion.div>
                 ))
               ) : (
-                <div className="text-center py-8 text-white/40">
-                  Henüz yorum yapılmamış. İlk yorumu siz yapın!
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-center py-12"
+                >
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-violet-500/10 flex items-center justify-center border border-violet-500/20">
+                    <Image
+                      src="https://api.iconify.design/fluent:chat-bubbles-question-24-regular.svg"
+                      alt="no comments"
+                      width={40}
+                      height={40}
+                      className="w-10 h-10"
+                      style={{ filter: 'invert(0.4) sepia(1) saturate(3) hue-rotate(220deg)' }}
+                    />
                 </div>
+                  <p className="text-white/40 text-lg font-medium">Henüz yorum yapılmamış</p>
+                  <p className="text-white/30 text-sm mt-2 max-w-md mx-auto">
+                    Bu model hakkında ilk yorumu siz yapın ve tartışmayı başlatın! Deneyimlerinizi paylaşarak topluluğa katkıda bulunun.
+                  </p>
+                </motion.div>
               )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>
