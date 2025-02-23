@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import ClientLayout from "@/components/layouts/client-layout";
 import { Analytics } from "@vercel/analytics/react";
 import Script from "next/script";
+import '@/lib/firebase';
 
 const inter = Inter({ subsets: ["latin"] });
 

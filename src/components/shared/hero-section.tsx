@@ -3,6 +3,9 @@
 import { motion } from "framer-motion";
 import { useSoundEffects } from "@/hooks/use-sound-effects";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useSupabase } from "@/components/providers/supabase-provider";
+import { MODELS } from "@/app/models/page";
 
 const slideUpVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -29,9 +32,64 @@ const glowVariants = {
   }
 };
 
+interface Stats {
+  userCount: number;
+  modelCount: number;
+  successRate: number;
+  supportTickets: number;
+}
+
 export function HeroSection() {
+  const { supabase } = useSupabase();
   const { playWooshSound } = useSoundEffects();
   const router = useRouter();
+  const [stats, setStats] = useState<Stats>({
+    userCount: 0,
+    modelCount: MODELS.length,
+    successRate: 0,
+    supportTickets: 0
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        // Kullanıcı sayısı
+        const { count: userCount } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact' });
+
+        // Başarı oranı - sabit değer kullanıyoruz
+        const successRate = 98;
+
+        setStats(prev => ({
+          ...prev,
+          userCount: userCount || 0,
+          successRate: successRate,
+          supportTickets: 5 // Sabit değer
+        }));
+      } catch (error) {
+        console.error('İstatistikler yüklenirken hata:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // İlk yükleme
+    fetchStats();
+
+    // Gerçek zamanlı güncellemeler için subscription
+    const subscription = supabase
+      .channel('stats_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+        fetchStats();
+      })
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
 
   return (
     <section className="relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden">
@@ -126,17 +184,66 @@ export function HeroSection() {
             animate="visible"
             className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-16"
           >
-            {[
-              { value: "10K+", label: "Kullanıcı" },
-              { value: "50+", label: "AI Model" },
-              { value: "99%", label: "Başarı" },
-              { value: "24/7", label: "Destek" }
-            ].map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="text-2xl font-bold text-white">{stat.value}</div>
-                <div className="text-sm text-white/50">{stat.label}</div>
-              </div>
-            ))}
+            {isLoading ? (
+              // Loading skeleton
+              Array(4).fill(0).map((_, index) => (
+                <div key={index} className="text-center animate-pulse">
+                  <div className="h-8 w-24 bg-white/5 rounded mx-auto mb-2"></div>
+                  <div className="h-4 w-16 bg-white/5 rounded mx-auto"></div>
+                </div>
+              ))
+            ) : (
+              <>
+                <div className="text-center">
+                  <motion.div 
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.1 }}
+                    className="text-2xl font-bold text-white"
+                  >
+                    {stats.userCount.toLocaleString()}+
+                  </motion.div>
+                  <div className="text-sm text-white/50">Kullanıcı</div>
+                </div>
+                <div className="text-center">
+                  <motion.div 
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="text-2xl font-bold text-white"
+                  >
+                    {stats.modelCount.toLocaleString()}+
+                  </motion.div>
+                  <div className="text-sm text-white/50">AI Model</div>
+                </div>
+                <div className="text-center">
+                  <motion.div 
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-2xl font-bold text-white"
+                  >
+                    %{stats.successRate}
+                  </motion.div>
+                  <div className="text-sm text-white/50">Başarı</div>
+                </div>
+                <div className="text-center">
+                  <motion.div 
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                    className="text-2xl font-bold text-white flex items-center justify-center gap-1"
+                  >
+                    <div className="flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </div>
+                    {stats.supportTickets}
+                  </motion.div>
+                  <div className="text-sm text-white/50">Aktif Destek</div>
+                </div>
+              </>
+            )}
           </motion.div>
         </div>
       </div>

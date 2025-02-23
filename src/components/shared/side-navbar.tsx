@@ -60,6 +60,13 @@ const MENU_ITEMS = [
     href: "/admin",
     requiresAuth: true,
     requiresAdmin: true
+  },
+  {
+    id: 8,
+    name: "Hakkında",
+    icon: "https://api.iconify.design/fluent:info-24-regular.svg",
+    activeIcon: "https://api.iconify.design/fluent:info-24-filled.svg",
+    href: "/about"
   }
 ];
 
