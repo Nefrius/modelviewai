@@ -11,6 +11,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "ModelView AI",
   description: "En son teknoloji AI modellerini keşfedin ve projelerinizde kullanın",
+  other: {
+    "google-adsense-account": "ca-pub-2964755747044989",
+  },
 };
 
 export default function RootLayout({
