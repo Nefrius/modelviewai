@@ -6,10 +6,11 @@ import { useParams } from "next/navigation";
 import { useFavorites } from "@/hooks/use-favorites";
 import { useComments } from "@/hooks/use-comments";
 import { useAuth } from "@/hooks/use-auth";
+import { useSupabase } from "@/components/providers/supabase-provider";
 import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
-import { MODELS } from "../page";
+import { MODELS } from "../constants";
 
 interface Model {
   id: string;
